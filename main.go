@@ -1,20 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 func main() {
-	// fmt.Println("Hello Golang")
-	/*fmt.Println("Khammunh")
-	fmt.Println("Khammunh")
-	fmt.Println("Khammunh")
-	fmt.Println("Khammunh")
-	fmt.Println("Khammunh")*/
-	fmt.Println("Khammunh")
-	//Manual Type declaration
-	var names string
-	names = "Khammunh manual type declaration"
-	fmt.Println(names)
-	//Type Inference
-	name2 := "Khammunh Type Inference"
-	fmt.Println(name2)
+	var URL string = "https://65c49fc3dae2304e92e2f2eb.mockapi.io/api/todoList"
+	resp, err := http.Get(URL)
+	if err != nil {
+		fmt.Println("Some error!")
+	}
+	fmt.Println((resp))
 }
