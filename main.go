@@ -1,67 +1,77 @@
 package main
 
 import (
-	"net/http"
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+
 )
 
-// album represents data about a record album.
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
-
-// albums slice to seed record album data.
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
-
 func main() {
-	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	router.GET("/albums/:id", getAlbumByID)
-	router.POST("/albums", postAlbums)
+	// Get environment variables
+	dbUsername := os.Getenv("DB_USERNAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
 
-	router.Run("localhost:8080")
-}
+	// Construct data source name (DSN)
+	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUsername, dbPassword, dbHost, dbPort, dbName)
 
-// getAlbums responds with the list of all albums as JSON.
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
-}
+	// Open a new database connection
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	defer db.Close()
 
-// postAlbums adds an album from JSON received in the request body.
-func postAlbums(c *gin.Context) {
-	var newAlbum album
-
-	// Call BindJSON to bind the received JSON to
-	// newAlbum.
-	if err := c.BindJSON(&newAlbum); err != nil {
-		return
+	// Check if the connection is successful
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Error pinging database:", err)
 	}
 
-	// Add the new album to the slice.
-	albums = append(albums, newAlbum)
-	c.IndentedJSON(http.StatusCreated, newAlbum)
-}
+	// Connection successful, you can execute queries here
+	fmt.Println("Connected to MySQL database successfully!")
+	//get:user - retrieve all users
+	//get: users/{id}-retrieve a specific use by ID
+	//post: USER-create a new user
+	//put:users/{id} - update existing	 by id
+	// delete/users/{id}-delete a specific use by
+	type User struct {
+		ID        int    `json:"id"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+	}
+	db, err = sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/database")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-// getAlbumByID locates the album whose ID value matches the id
-// parameter sent by the client, then returns that album as a response.
-func getAlbumByID(c *gin.Context) {
-	id := c.Param("id")
 
-	// Loop through the list of albums, looking for
-	// an album whose ID value matches the parameter.
-	for _, a := range albums {
-		if a.ID == id {
-			c.IndentedJSON(http.StatusOK, a)
-			return
+	func getUsers(w http.ResponseWriter, r *http.Request) {
+		var users []User
+		rows, err := db.Query("SELECT id, first_name, last_name, email FROM users")
+		if err != nil {
+			log.Fatal(err)
 		}
+		defer rows.Close()
+	
+		for rows.Next() {
+			var user User
+			err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email)
+			if err != nil {
+				log.Fatal(err)
+			}
+			users = append(users, user)
+		}
+	
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(users)
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
 }
