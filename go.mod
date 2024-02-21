@@ -1,4 +1,5 @@
 module gobasic
+module https://github.com/Khammunh/start-golang
 
 go 1.22.0
 
