@@ -1,8 +1,8 @@
-package khammunh
+package khammunhGo
 
 import "fmt"
 
 
-func khammunh() {
+func Test() {
 	fmt.Println("Hello Khammunh")
 }
