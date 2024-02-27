@@ -1,14 +1,27 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/hello" {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Method not supported", http.StatusNotFound)
+		return
+	}
+	fmt.Fprintf(w, "Hello world")
+}
 
 func main() {
-	var name string = "test";
-	name2 := "test2";
-	var age int = 10 ;
-
-	fmt.Println(name)
-	fmt.Println("Khammunh",age, name2)
-	name2 = "testKhammunh"
-	
+	http.HandleFunc("/hello", helloHandler)
+	fmt.Printf("Starting server at port 8080\n")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 }
