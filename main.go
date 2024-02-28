@@ -1,27 +1,32 @@
 package main
 
-import (
-	"fmt"
-	"log"
-	"net/http"
-)
+import "github.com/gofiber/fiber/v2"
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/hello" {
-		http.Error(w, "404 not found", http.StatusNotFound)
-		return
-	}
-	if r.Method != "GET" {
-		http.Error(w, "Method not supported", http.StatusNotFound)
-		return
-	}
-	fmt.Fprintf(w, "Hello world")
+
+type Book struct {
+	ID  int `json': "id"`
+	Title string `json": "title"`
+	Author string `json": "author"`
+
 }
+var books  []Book
 
 func main() {
-	http.HandleFunc("/hello", helloHandler)
-	fmt.Printf("Starting server at port 8080\n")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	}
+    app := fiber.New()
+
+	books = append(books,Book{ID: 1, Title: "Mr John", Author: "Make"})
+	books = append(books,Book{ID: 2, Title: "Mr Son", Author: "Jecket 3"})
+    app.Get("/books",getBooks)	
+	app.Get("/books/:id",getBook)
+
+     app.Listen(":8080")
 }
+
+func getBooks(c *fiber.Ctx) error {
+	return c.JSON(books)
+}
+func getBook(c *fiber.Ctx) error {
+	bookId := c.Params("id")
+	return c.SendString(bookId)
+}
+
